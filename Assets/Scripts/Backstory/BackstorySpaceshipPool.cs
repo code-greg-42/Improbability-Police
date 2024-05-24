@@ -2,10 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SpaceshipPool : ObjectPool
+public class BackstorySpaceshipPool : ObjectPool
 {
-    public static SpaceshipPool Instance;
+    public static BackstorySpaceshipPool Instance;
     [SerializeField] private GameObject[] spaceshipPrefabs; // array of spaceships
+    // objectToPool in inspector does not need to be set
 
     protected override void Awake()
     {
