@@ -2,16 +2,29 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class BackstoryManager : MonoBehaviour
 {
-    [SerializeField] private TMP_Text backstoryText;
+    // affects speed of words across the screen
     private readonly float wordDisplayDelay = 0.1f; // delay between each word
-    private readonly float pauseMultiplier = 0.25f;
-    private readonly float endingDelay = 7.0f;
+    private readonly float pauseMultiplier = 0.25f; // used in conjuction with the length of each paragraph to determine pause between each paragraph
 
+    // delay timers
+    private readonly float startDelay = 1.0f;
+    private readonly float endingDelay = 4.2f;
+
+    // rate for fading music
+    private readonly float musicFadeTimer = 0.35f; // fading 1% every X seconds
+
+    [Header("References")]
+    [SerializeField] private TMP_Text backstoryText;
+    [SerializeField] private Button menuButton;
     [SerializeField] private BackstorySpaceshipSpawner spaceshipSpawner;
+    [SerializeField] private AudioSource audioSource;
 
+    // narrative writing separated into paragraphs
     private readonly List<string> paragraphs = new List<string>
     {
         "The year is 5,231,100,224 AD. Humanity has left the cradle of Earth and taken to the stars after the sun's collapse. Our mission: to find new homes among the countless stars.",
@@ -24,17 +37,23 @@ public class BackstoryManager : MonoBehaviour
     void Start()
     {
         StartCoroutine(RunScene());
+
+        menuButton.onClick.AddListener(ReturnToMenu);
     }
 
     private IEnumerator RunScene()
     {
+        // wait for start delay
+        yield return new WaitForSeconds(startDelay);
+
         // display paragraphs
         yield return StartCoroutine(DisplayParagraphs());
 
         // wait additional time
         yield return new WaitForSeconds(endingDelay);
 
-        Debug.Log("Returning to main menu");
+        // return to main menu
+        SceneManager.LoadScene(0);
     }
 
     private IEnumerator DisplayParagraphs()
@@ -47,7 +66,11 @@ public class BackstoryManager : MonoBehaviour
             // If this is the last paragraph, stop the spaceship spawning
             if (i == paragraphs.Count - 1)
             {
+                // stop spawning of additional ships
                 spaceshipSpawner.StopSpawn();
+
+                // start the music fade
+                StartCoroutine(FadeMusic());
             }
 
             foreach (string word in words)
@@ -59,5 +82,23 @@ public class BackstoryManager : MonoBehaviour
             float paragraphPauseDuration = words.Length * pauseMultiplier; // Calculate pause duration based on the number of words
             yield return new WaitForSeconds(paragraphPauseDuration); // Wait for the specified pause duration
         }
+    }
+
+    private IEnumerator FadeMusic()
+    {
+        while (audioSource.volume > 0.01f)
+        {
+            audioSource.volume -= 0.01f;
+            yield return new WaitForSeconds(musicFadeTimer);
+        }
+
+        audioSource.volume = 0f;
+        audioSource.Stop();
+    }
+
+    private void ReturnToMenu()
+    {
+        // load main menu scene
+        SceneManager.LoadScene(0);
     }
 }
