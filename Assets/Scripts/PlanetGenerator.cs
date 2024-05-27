@@ -5,9 +5,10 @@ using UnityEngine.UI;
 
 public class PlanetGenerator : MonoBehaviour
 {
-    public string planetDescription;
+    public static PlanetGenerator Instance { get; private set; }
 
-    public RawImage planetImageUI;
+    private string planetDescription;
+    private Texture2D planetImage;
 
     private readonly int terrainsUsed = 3; // number of different terrains sent in the prompt
 
@@ -29,12 +30,88 @@ public class PlanetGenerator : MonoBehaviour
         "mesa", "oasis", "foothills", "sinkhole"
     };
 
+    private void Awake()
+    {
+        // singleton
+        Instance = this;
+    }
+
     // single random instance
     private System.Random random = new System.Random();
 
-    void Start()
+    public string GetPlanetDescription()
     {
-        StartCoroutine(GeneratePlanetCoroutine());
+        return planetDescription;
+    }
+
+    public Texture2D GetPlanetImage()
+    {
+        return planetImage;
+    }
+
+    public string GeneratePlanetName()
+    {
+        // randomize letters for planet name
+        string firstLetter = alphabet[random.Next(alphabet.Length)];
+        string secondLetter = alphabet[random.Next(alphabet.Length)];
+
+        // randomize planet number
+        int planetNumber = random.Next(0, 1000000);
+
+        // combine random values into full planet name
+        string planetName = firstLetter + secondLetter + "-" + planetNumber;
+
+        return planetName;
+    }
+
+    public IEnumerator GeneratePlanetCoroutine(string planetName)
+    {
+        // generate prompt
+        string randomPlanetPrompt = GeneratePlanetPrompt(planetName);
+
+        // send prompt to open ai api and wait for response
+        yield return OpenAIManager.Instance.GetResponseCoroutine(randomPlanetPrompt);
+
+        // get response
+        string recentResponse = OpenAIManager.Instance.GetResponse();
+
+        // if response is not null, set to planet description
+        if (recentResponse != null)
+        {
+            planetDescription = recentResponse;
+            Debug.Log(planetDescription);
+
+            // generate image based on description
+            yield return OpenAIManager.Instance.GetImageCoroutine(planetDescription);
+            planetImage = OpenAIManager.Instance.GetImage();
+
+            if (planetImage != null)
+            {
+                Debug.Log("Image generation successful");
+            }
+            else
+            {
+                Debug.LogError("Failed to generate image.");
+            }
+        }
+        else
+        {
+            Debug.LogError("Failed to receive a response from OpenAI");
+        }
+    }
+
+    private string GeneratePlanetPrompt(string planetName)
+    {
+        // get new terrain types
+        string[] selectedTerrains = GenerateTerrainTypes(terrainsUsed);
+
+        // randomize scores for water and animal life
+        int waterFactor = random.Next(0, 11);
+        int animalLifeFactor = random.Next(0, 11);
+
+        // combine into prompt
+        string prompt = "Describe the fictional planet " + planetName + " in 120 words or less. This planet has but is not limited to the following terrain types: " + selectedTerrains[0] + ", " + selectedTerrains[1] + ", " + selectedTerrains[2] + ". It has a water score of " + waterFactor + "/10" + " and an animal life score of " + animalLifeFactor + "/10. No intelligent life has been found.";
+        return prompt;
     }
 
     private string GetRandomTerrainType()
@@ -53,75 +130,5 @@ public class PlanetGenerator : MonoBehaviour
         }
 
         return selectedTerrains;
-    }
-
-    private string GeneratePlanetName()
-    {
-        // randomize letters for planet name
-        string firstLetter = alphabet[random.Next(alphabet.Length)];
-        string secondLetter = alphabet[random.Next(alphabet.Length)];
-
-        // randomize planet number
-        int planetNumber = random.Next(0, 1000000);
-
-        // combine random values into full planet name
-        string planetName = firstLetter + secondLetter + "-" + planetNumber;
-
-        return planetName;
-    }
-
-    private string GeneratePlanetPrompt()
-    {
-        // get new terrain types
-        string[] selectedTerrains = GenerateTerrainTypes(terrainsUsed);
-        // get new planet name
-        string planetName = GeneratePlanetName();
-
-        // randomize scores for water and animal life
-        int waterFactor = random.Next(0, 11);
-        int animalLifeFactor = random.Next(0, 11);
-        
-        // combine into prompt
-        string prompt = "Describe the fictional planet " + planetName + " in 120 words or less. This planet has but is not limited to the following terrain types: " + selectedTerrains[0] + ", " + selectedTerrains[1] + ", " + selectedTerrains[2] + ". It has a water score of " + waterFactor + "/10" + " and an animal life score of " + animalLifeFactor + "/10. No intelligent life has been found.";
-        return prompt;
-    }
-
-    public IEnumerator GeneratePlanetCoroutine()
-    {
-        // generate prompt
-        string randomPlanetPrompt = GeneratePlanetPrompt();
-        Debug.Log(randomPlanetPrompt);
-
-        // send prompt to open ai api and wait for response
-        yield return OpenAIManager.Instance.GetResponseCoroutine(randomPlanetPrompt);
-
-        // get response
-        string recentResponse = OpenAIManager.Instance.GetResponse();
-
-        // if response is not null, set to planet description
-        if (recentResponse != null)
-        {
-            planetDescription = recentResponse;
-            Debug.Log(planetDescription);
-
-            // generate image based on description
-            yield return OpenAIManager.Instance.GetImageCoroutine(planetDescription);
-            Texture2D planetImage = OpenAIManager.Instance.GetImage();
-
-            if (planetImage != null)
-            {
-                // display image on ui
-                planetImageUI.texture = planetImage;
-                Debug.Log("Image generation successful");
-            }
-            else
-            {
-                Debug.LogError("Failed to generate image.");
-            }
-        }
-        else
-        {
-            Debug.LogError("Failed to receive a response from OpenAI");
-        }
     }
 }
