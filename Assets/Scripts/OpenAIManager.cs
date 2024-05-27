@@ -2,20 +2,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
-using TMPro;
-using UnityEngine.UI;
 using System.IO;
 
 public class OpenAIManager : MonoBehaviour
 {
+    public static OpenAIManager Instance { get; private set; }
+
     private string apiKey;
     private readonly string apiUrl = "https://api.openai.com/v1/chat/completions";
-    private readonly int maxTokens = 150;
-    private readonly string systemInstructions = "You are a helpful assistant.";
+    private readonly string imageApiUrl = "https://api.openai.com/v1/images/generations"; // URL for image generation
 
-    public TMP_InputField inputField;
-    public TMP_Text responseText;
-    public Button submitButton;
+    private string recentResponse;
+    private Texture2D recentImage;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
@@ -26,8 +29,6 @@ public class OpenAIManager : MonoBehaviour
             Debug.LogError("API Key is missing. Please set the API key in the config.json file.");
             return;
         }
-
-        submitButton.onClick.AddListener(OnSubmit);
     }
 
     private void LoadApiKeyFromConfig()
@@ -47,20 +48,17 @@ public class OpenAIManager : MonoBehaviour
         }
     }
 
-    public void OnSubmit()
+    public string GetResponse()
     {
-        // Get the user prompt from the input field and send the prompt
-        string prompt = inputField.text;
-        SendPrompt(prompt, OnResponseReceived);
+        return recentResponse;
     }
 
-    public void SendPrompt(string prompt, System.Action<string> callback)
+    public Texture2D GetImage()
     {
-        // Start the coroutine to send the prompt to the OpenAI API
-        StartCoroutine(SendPromptCoroutine(prompt, callback));
+        return recentImage;
     }
 
-    private IEnumerator SendPromptCoroutine(string prompt, System.Action<string> callback)
+    public IEnumerator GetResponseCoroutine(string prompt, string systemInstructions = "You are a helpful assistant.", int maxTokens = 200)
     {
         // Create the messages list
         List<Message> messages = new List<Message>
@@ -104,26 +102,75 @@ public class OpenAIManager : MonoBehaviour
             string responseText = request.downloadHandler.text;
             OpenAIChatResponse response = JsonUtility.FromJson<OpenAIChatResponse>(responseText);
 
-            // Execute the callback with the received message content
-            callback(response.choices[0].message.content.Trim());
+            // set the recent response variable
+            recentResponse = response.choices[0].message.content.Trim();
         }
         else
         {
             // Log an error if the request failed
             Debug.LogError("Error: " + request.error);
-            callback(null);
+            recentResponse = null;
         }
     }
 
-    private void OnResponseReceived(string response)
+    public IEnumerator GetImageCoroutine(string description)
     {
-        if (!string.IsNullOrEmpty(response))
+        // Create the request object for image generation
+        OpenAIImageRequest requestObject = new OpenAIImageRequest
         {
-            responseText.text = response;
+            prompt = description,
+            n = 1,
+            size = "1024x1024"
+        };
+
+        // Convert the JSON object to a string
+        string jsonData = JsonUtility.ToJson(requestObject);
+
+        // Create a new UnityWebRequest for the POST request
+        UnityWebRequest request = new UnityWebRequest(imageApiUrl, "POST");
+
+        // Set the request body to the JSON data
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+
+        // Set up the response handler
+        request.downloadHandler = new DownloadHandlerBuffer();
+
+        // Set the request headers for content type and authorization
+        request.SetRequestHeader("Content-Type", "application/json");
+        request.SetRequestHeader("Authorization", "Bearer " + apiKey);
+
+        // Send the request and wait for the response
+        yield return request.SendWebRequest();
+
+        // Check if the request was successful
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            // Parse the response JSON
+            string responseText = request.downloadHandler.text;
+            OpenAIImageResponse response = JsonUtility.FromJson<OpenAIImageResponse>(responseText);
+
+            // Download the image
+            UnityWebRequest imageRequest = UnityWebRequestTexture.GetTexture(response.data[0].url);
+            yield return imageRequest.SendWebRequest();
+
+            if (imageRequest.result == UnityWebRequest.Result.Success)
+            {
+                // Set the recent image variable
+                recentImage = DownloadHandlerTexture.GetContent(imageRequest);
+            }
+            else
+            {
+                // Log an error if the image download failed
+                Debug.LogError("Error downloading image: " + imageRequest.error);
+                recentImage = null;
+            }
         }
         else
         {
-            responseText.text = "Error receiving response.";
+            // Log an error if the request failed
+            Debug.LogError("Error: " + request.error);
+            recentImage = null;
         }
     }
 
@@ -158,6 +205,26 @@ public class OpenAIManager : MonoBehaviour
         public string model;
         public List<Message> messages;
         public int max_tokens;
+    }
+
+    [System.Serializable]
+    private class OpenAIImageRequest
+    {
+        public string prompt;
+        public int n;
+        public string size;
+    }
+
+    [System.Serializable]
+    private class OpenAIImageResponse
+    {
+        public Data[] data;
+    }
+
+    [System.Serializable]
+    private class Data
+    {
+        public string url;
     }
 }
 

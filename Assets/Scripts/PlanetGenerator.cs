@@ -4,16 +4,18 @@ using UnityEngine;
 
 public class PlanetGenerator : MonoBehaviour
 {
-    private int terrainsUsed = 3; // number of different terrains sent in the prompt
+    public string planetDescription;
+
+    private readonly int terrainsUsed = 3; // number of different terrains sent in the prompt
 
     // Array of uppercase alphabet letters for planet name
-    private string[] alphabet = new string[]
+    private readonly string[] alphabet = new string[]
     {
         "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
         "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
     };
 
-    private string[] terrainTypes = new string[]
+    private readonly string[] terrainTypes = new string[]
     {
         "flat", "hilly", "mountainous", "aquatic",
         "desert", "forest", "jungle", "swamp", "tundra", "urban",
@@ -29,8 +31,7 @@ public class PlanetGenerator : MonoBehaviour
 
     void Start()
     {
-        string randomPrompt = GeneratePlanetPrompt();
-        Debug.Log(randomPrompt);
+        StartCoroutine(GeneratePlanetCoroutine());
     }
 
     private string GetRandomTerrainType()
@@ -76,9 +77,33 @@ public class PlanetGenerator : MonoBehaviour
         // randomize scores for water and animal life
         int waterFactor = random.Next(0, 11);
         int animalLifeFactor = random.Next(0, 11);
-
+        
         // combine into prompt
-        string prompt = "Describe the fictional planet " + planetName + "in 200 words or less. This planet has but is not limited to the following terrain types: " + selectedTerrains[0] + ", " + selectedTerrains[1] + ", " + selectedTerrains[2] + ". It has a water score of " + waterFactor + "/10" + " and an animal life score of " + animalLifeFactor + "/10. No intelligent life has been found.";
+        string prompt = "Describe the fictional planet " + planetName + " in 150 words or less. This planet has but is not limited to the following terrain types: " + selectedTerrains[0] + ", " + selectedTerrains[1] + ", " + selectedTerrains[2] + ". It has a water score of " + waterFactor + "/10" + " and an animal life score of " + animalLifeFactor + "/10. No intelligent life has been found.";
         return prompt;
+    }
+
+    public IEnumerator GeneratePlanetCoroutine()
+    {
+        // generate prompt
+        string randomPlanetPrompt = GeneratePlanetPrompt();
+        Debug.Log(randomPlanetPrompt);
+
+        // send prompt to open ai api and wait for response
+        yield return OpenAIManager.Instance.GetResponseCoroutine(randomPlanetPrompt);
+
+        // get response
+        string recentResponse = OpenAIManager.Instance.GetResponse();
+
+        // if response is not null, set to planet description
+        if (recentResponse != null)
+        {
+            planetDescription = recentResponse;
+            Debug.Log(planetDescription);
+        }
+        else
+        {
+            Debug.LogError("Failed to receive a response from OpenAI");
+        }
     }
 }
