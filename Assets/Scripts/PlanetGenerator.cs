@@ -1,10 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlanetGenerator : MonoBehaviour
 {
     public string planetDescription;
+
+    public RawImage planetImageUI;
 
     private readonly int terrainsUsed = 3; // number of different terrains sent in the prompt
 
@@ -79,7 +82,7 @@ public class PlanetGenerator : MonoBehaviour
         int animalLifeFactor = random.Next(0, 11);
         
         // combine into prompt
-        string prompt = "Describe the fictional planet " + planetName + " in 150 words or less. This planet has but is not limited to the following terrain types: " + selectedTerrains[0] + ", " + selectedTerrains[1] + ", " + selectedTerrains[2] + ". It has a water score of " + waterFactor + "/10" + " and an animal life score of " + animalLifeFactor + "/10. No intelligent life has been found.";
+        string prompt = "Describe the fictional planet " + planetName + " in 120 words or less. This planet has but is not limited to the following terrain types: " + selectedTerrains[0] + ", " + selectedTerrains[1] + ", " + selectedTerrains[2] + ". It has a water score of " + waterFactor + "/10" + " and an animal life score of " + animalLifeFactor + "/10. No intelligent life has been found.";
         return prompt;
     }
 
@@ -100,6 +103,21 @@ public class PlanetGenerator : MonoBehaviour
         {
             planetDescription = recentResponse;
             Debug.Log(planetDescription);
+
+            // generate image based on description
+            yield return OpenAIManager.Instance.GetImageCoroutine(planetDescription);
+            Texture2D planetImage = OpenAIManager.Instance.GetImage();
+
+            if (planetImage != null)
+            {
+                // display image on ui
+                planetImageUI.texture = planetImage;
+                Debug.Log("Image generation successful");
+            }
+            else
+            {
+                Debug.LogError("Failed to generate image.");
+            }
         }
         else
         {

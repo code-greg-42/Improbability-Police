@@ -75,22 +75,8 @@ public class OpenAIManager : MonoBehaviour
             max_tokens = maxTokens
         };
 
-        // Convert the JSON object to a string
-        string jsonData = JsonUtility.ToJson(requestObject);
-
-        // Create a new UnityWebRequest for the POST request
-        UnityWebRequest request = new UnityWebRequest(apiUrl, "POST");
-
-        // Set the request body to the JSON data
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-
-        // Set up the response handler
-        request.downloadHandler = new DownloadHandlerBuffer();
-
-        // Set the request headers for content type and authorization
-        request.SetRequestHeader("Content-Type", "application/json");
-        request.SetRequestHeader("Authorization", "Bearer " + apiKey);
+        // Use the helper method to create the request
+        UnityWebRequest request = CreatePostRequest(apiUrl, requestObject);
 
         // Send the request and wait for the response
         yield return request.SendWebRequest();
@@ -123,22 +109,8 @@ public class OpenAIManager : MonoBehaviour
             size = "1024x1024"
         };
 
-        // Convert the JSON object to a string
-        string jsonData = JsonUtility.ToJson(requestObject);
-
-        // Create a new UnityWebRequest for the POST request
-        UnityWebRequest request = new UnityWebRequest(imageApiUrl, "POST");
-
-        // Set the request body to the JSON data
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-
-        // Set up the response handler
-        request.downloadHandler = new DownloadHandlerBuffer();
-
-        // Set the request headers for content type and authorization
-        request.SetRequestHeader("Content-Type", "application/json");
-        request.SetRequestHeader("Authorization", "Bearer " + apiKey);
+        // Use the helper method to create the request
+        UnityWebRequest request = CreatePostRequest(imageApiUrl, requestObject);
 
         // Send the request and wait for the response
         yield return request.SendWebRequest();
@@ -172,6 +144,28 @@ public class OpenAIManager : MonoBehaviour
             Debug.LogError("Error: " + request.error);
             recentImage = null;
         }
+    }
+
+    private UnityWebRequest CreatePostRequest(string apiUrl, object requestObject)
+    {
+        // Convert the JSON object to a string
+        string jsonData = JsonUtility.ToJson(requestObject);
+
+        // Create a new UnityWebRequest for the POST request
+        UnityWebRequest request = new UnityWebRequest(apiUrl, "POST");
+
+        // Set the request body to the JSON data
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+
+        // Set up the response handler
+        request.downloadHandler = new DownloadHandlerBuffer();
+
+        // Set the request headers for content type and authorization
+        request.SetRequestHeader("Content-Type", "application/json");
+        request.SetRequestHeader("Authorization", "Bearer " + apiKey);
+
+        return request;
     }
 
     [System.Serializable]
