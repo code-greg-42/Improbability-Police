@@ -6,7 +6,10 @@ public class CivilizationGameManager : MonoBehaviour
 {
     public static CivilizationGameManager Instance { get; private set; }
 
-    private readonly int startDelay = 2;
+    private readonly float startDelay = 1.5f;
+    private readonly float startTextMinimumTime = 17.0f;
+    private readonly string initialStartText = "Your ships, which contain 100,000 people, are heading towards your assigned planet. Food, water, basic shelter, and security are guaranteed from the technology you possess. Happiness is not. Reminder: Unique civilizations are rewarded greatly. Good Luck! Your assigned planet is: Planet ";
+    private readonly string openingQuestion = "\n\nYou will be landing momentarily. What is your first action for your civilization?";
 
     private void Awake()
     {
@@ -26,7 +29,10 @@ public class CivilizationGameManager : MonoBehaviour
         // get new planet name
         string planetName = PlanetGenerator.Instance.GeneratePlanetName();
         // init start text with planet name
-        StartCoroutine(CivilizationUIManager.Instance.DisplayStartText("You Have Been Assigned: Planet " + planetName));
+        StartCoroutine(CivilizationUIManager.Instance.DisplayStartText(initialStartText + planetName));
+
+        // set start time for ensuring start text is displayed for long enough
+        float startTime = Time.time;
 
         // run planet generator and wait for results
         yield return StartCoroutine(PlanetGenerator.Instance.GeneratePlanetCoroutine(planetName));
@@ -34,10 +40,22 @@ public class CivilizationGameManager : MonoBehaviour
         string planetDescription = PlanetGenerator.Instance.GetPlanetDescription();
         Texture2D planetImage = PlanetGenerator.Instance.GetPlanetImage();
 
+        // find elapsed time and wait for additional time if necessary
+        float elapsedTime = Time.time - startTime;
+        
+        if (elapsedTime < startTextMinimumTime)
+        {
+            float waitTime = startTextMinimumTime - elapsedTime;
+            yield return new WaitForSeconds(waitTime);
+        }
+
         // set results to UI and display main description text on screen
         CivilizationUIManager.Instance.SetImage(planetImage);
         CivilizationUIManager.Instance.DeactivateStartText();
-        StartCoroutine(CivilizationUIManager.Instance.DisplayMainText(planetDescription));
         CivilizationUIManager.Instance.ActivateImage();
+        yield return StartCoroutine(CivilizationUIManager.Instance.DisplayMainText(planetDescription + openingQuestion));
+        
+        // activate user input field
+        CivilizationUIManager.Instance.ActivateUserInput();
     }
 }

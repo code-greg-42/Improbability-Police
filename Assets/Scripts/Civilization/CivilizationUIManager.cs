@@ -14,6 +14,8 @@ public class CivilizationUIManager : MonoBehaviour
     [SerializeField] private TMP_Text mainText;
     [SerializeField] private TMP_Text startText;
     [SerializeField] private RawImage image;
+    [SerializeField] private TMP_InputField userInput;
+    [SerializeField] private Button submitButton;
 
     private void Awake()
     {
@@ -25,9 +27,21 @@ public class CivilizationUIManager : MonoBehaviour
         image.gameObject.SetActive(true);
     }
 
+    public void ActivateUserInput()
+    {
+        userInput.gameObject.SetActive(true);
+        submitButton.gameObject.SetActive(true);
+    }
+
     public void DeactivateStartText()
     {
         startText.gameObject.SetActive(false);
+    }
+
+    public void DeactivateUserInput()
+    {
+        userInput.gameObject.SetActive(false);
+        submitButton.gameObject.SetActive(false);
     }
 
     public void SetImage(Texture2D texture)
