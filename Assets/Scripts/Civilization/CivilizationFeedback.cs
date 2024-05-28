@@ -11,7 +11,9 @@ public class CivilizationFeedback : MonoBehaviour
     private float uniquenessScore;
     private string characteristic;
 
+    private Texture2D feedbackImage;
     private bool feedbackSuccess;
+    private bool imageSuccess;
 
     private readonly string instructions = "Let's play a game. I'm the user, I've been given control of a new civilization with advanced building technology. " +
             "I am landing on a new planet to build a new civilization. Food, water, and basic shelter are guaranteed, but happiness of the civilization is not. " +
@@ -51,6 +53,7 @@ public class CivilizationFeedback : MonoBehaviour
         if (!string.IsNullOrEmpty(feedback))
         {
             feedbackSuccess = ParseFeedback(feedback);
+
             if (!feedbackSuccess)
             {
                 Debug.LogError("Failed to parse feedback correctly.");
@@ -62,6 +65,48 @@ public class CivilizationFeedback : MonoBehaviour
         }
     }
 
+    public IEnumerator GetFeedbackImageCoroutine(string civilizationDescription)
+    {
+        yield return OpenAIManager.Instance.GetImageCoroutine(civilizationDescription);
+        feedbackImage = OpenAIManager.Instance.GetImage();
+
+        if (feedbackImage != null)
+        {
+            imageSuccess = true;
+            Debug.Log("Image generation successful.");
+        }
+        else
+        {
+            Debug.Log("Image generation unsuccessful.");
+        }
+    }
+
+    public Texture2D GetFeedbackImage()
+    {
+        // reset imageSuccess bool and return image
+        imageSuccess = false;
+        return feedbackImage;
+    }
+
+    public (string, float, float, string) GetFeedback()
+    {
+        // Reset feedbackSuccess to false after the values are retrieved
+        var result = (feedbackDescription, happinessScore, uniquenessScore, characteristic);
+        feedbackSuccess = false;
+        return result;
+    }
+
+    public bool IsFeedbackSuccess()
+    {
+        return feedbackSuccess;
+    }
+
+    public bool IsImageSuccess()
+    {
+        return imageSuccess;
+    }
+
+    // helper method
     private string FormatPrompt(string planetDescription, string userAction, string civilizationDescription)
     {
         string prompt = instructions + "\n\nPlanet Description:\n" + planetDescription + "\n\nCivilization Description:\n" + civilizationDescription + "\n\nUser Action:\n" + userAction;
@@ -124,18 +169,5 @@ public class CivilizationFeedback : MonoBehaviour
             Debug.LogError("Exception occurred while parsing feedback: " + ex.Message);
             return false;
         }
-    }
-
-    public (string, float, float, string) GetFeedback()
-    {
-        // Reset feedbackSuccess to false after the values are retrieved
-        var result = (feedbackDescription, happinessScore, uniquenessScore, characteristic);
-        feedbackSuccess = false;
-        return result;
-    }
-
-    public bool IsFeedbackSuccess()
-    {
-        return feedbackSuccess;
     }
 }

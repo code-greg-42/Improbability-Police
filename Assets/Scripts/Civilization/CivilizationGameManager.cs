@@ -72,6 +72,22 @@ public class CivilizationGameManager : MonoBehaviour
             Debug.Log("Happiness Score: " + happinessScore);
             Debug.Log("Uniqueness Score: " + uniquenessScore);
             Debug.Log("Characteristic: " + characteristic);
+
+            // set scores to UI
+            CivilizationUIManager.Instance.SetCharacteristic(characteristic);
+            CivilizationUIManager.Instance.SetHappinessScore(happinessScore);
+            CivilizationUIManager.Instance.SetUniquenessScore(uniquenessScore);
+
+            // display feedback in main text slot
+            StartCoroutine(CivilizationUIManager.Instance.DisplayMainText(feedbackDescription));
+
+            yield return StartCoroutine(CivilizationFeedback.Instance.GetFeedbackImageCoroutine(feedbackDescription));
+
+            if (CivilizationFeedback.Instance.IsImageSuccess())
+            {
+                Texture2D feedbackImage = CivilizationFeedback.Instance.GetFeedbackImage();
+                CivilizationUIManager.Instance.SetImage(feedbackImage);
+            }
         }
         else
         {

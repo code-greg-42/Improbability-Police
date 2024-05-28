@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using Unity.VisualScripting;
 
 public class CivilizationUIManager : MonoBehaviour
 {
@@ -13,6 +14,9 @@ public class CivilizationUIManager : MonoBehaviour
     // references
     [SerializeField] private TMP_Text mainText;
     [SerializeField] private TMP_Text startText;
+    [SerializeField] private TMP_Text happinessScore;
+    [SerializeField] private TMP_Text uniquenessScore;
+    [SerializeField] private TMP_Text characteristic;
     [SerializeField] private RawImage image;
     [SerializeField] private TMP_InputField userInput;
     [SerializeField] private Button submitButton;
@@ -44,9 +48,24 @@ public class CivilizationUIManager : MonoBehaviour
         submitButton.gameObject.SetActive(false);
     }
 
+    public void SetCharacteristic(string description)
+    {
+        characteristic.text = "Leadership Personality: " + description;
+    }
+
+    public void SetHappinessScore(float score)
+    {
+        happinessScore.text = "Happiness: " + score;
+    }
+
     public void SetImage(Texture2D texture)
     {
         image.texture = texture;
+    }
+
+    public void SetUniquenessScore(float score)
+    {
+        uniquenessScore.text = "Uniqueness: " + score;
     }
 
     public IEnumerator DisplayStartText(string text)
