@@ -6,7 +6,13 @@ public class CivilizationFeedback : MonoBehaviour
 {
     public static CivilizationFeedback Instance { get; private set; }
 
-    private string feedback;
+    private string feedbackDescription;
+    private float happinessScore;
+    private float uniquenessScore;
+    private string characteristic;
+
+    private bool feedbackSuccess;
+
     private readonly string instructions = "Let's play a game. I'm the user, I've been given control of a new civilization with advanced building technology. " +
             "I am landing on a new planet to build a new civilization. Food, water, and basic shelter are guaranteed, but happiness of the civilization is not. " +
             "I'm going to give you a description of the planet, a description of where the civilization is at, and then give you a chosen action for the next step for the civilization. " +
@@ -31,24 +37,105 @@ public class CivilizationFeedback : MonoBehaviour
         Instance = this;
     }
 
-    public string GetFeedback()
-    {
-        return feedback;
-    }
-
     public IEnumerator GetFeedbackCoroutine(string planetDescription, string userAction, string civilizationDescription = "The is the first step in the game and the user has not chosen to build anything yet. The civilization is currently a collection of people, with basic shelter structures set up, but nothing more.")
     {
         string formattedPrompt = FormatPrompt(planetDescription, userAction, civilizationDescription);
 
         // send formatted prompt to open ai api and wait for response
         yield return OpenAIManager.Instance.GetResponseCoroutine(formattedPrompt);
-        // get result and set to feedback variable
-        feedback = OpenAIManager.Instance.GetResponse();
+
+        // get result
+        string feedback = OpenAIManager.Instance.GetResponse();
+
+        // parse into feedback variables
+        if (!string.IsNullOrEmpty(feedback))
+        {
+            feedbackSuccess = ParseFeedback(feedback);
+            if (!feedbackSuccess)
+            {
+                Debug.LogError("Failed to parse feedback correctly.");
+            }
+        }
+        else
+        {
+            Debug.LogError("Failed to receive feedback from OpenAI.");
+        }
     }
 
     private string FormatPrompt(string planetDescription, string userAction, string civilizationDescription)
     {
         string prompt = instructions + "\n\nPlanet Description:\n" + planetDescription + "\n\nCivilization Description:\n" + civilizationDescription + "\n\nUser Action:\n" + userAction;
         return prompt;
+    }
+
+    private bool ParseFeedback(string feedback)
+    {
+        try
+        {
+            string[] lines = feedback.Split(new[] { "\n" }, System.StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string line in lines)
+            {
+                if (line.StartsWith("Description: "))
+                {
+                    feedbackDescription = line.Substring("Description: ".Length);
+                }
+                else if (line.StartsWith("Happiness: "))
+                {
+                    if (float.TryParse(line.Substring("Happiness: ".Length), out float happiness))
+                    {
+                        happinessScore = happiness;
+                    }
+                    else
+                    {
+                        Debug.LogError("Failed to parse Happiness score.");
+                        return false;
+                    }
+                }
+                else if (line.StartsWith("Uniqueness: "))
+                {
+                    if (float.TryParse(line.Substring("Uniqueness: ".Length), out float uniqueness))
+                    {
+                        uniquenessScore = uniqueness;
+                    }
+                    else
+                    {
+                        Debug.LogError("Failed to parse Uniqueness score.");
+                        return false;
+                    }
+                }
+                else if (line.StartsWith("Characteristic: "))
+                {
+                    characteristic = line.Substring("Characteristic: ".Length);
+                }
+            }
+
+            // Ensure all required fields are populated
+            if (string.IsNullOrEmpty(feedbackDescription) || string.IsNullOrEmpty(characteristic) || happinessScore == 0 || uniquenessScore == 0)
+            {
+                Debug.LogError("Incomplete feedback data.");
+                return false;
+            }
+
+            return true;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Exception occurred while parsing feedback: " + ex.Message);
+            return false;
+        }
+    }
+
+    public (string, float, float, string) GetFeedback()
+    {
+        // Reset feedbackSuccess to false after the values are retrieved
+        var result = (feedbackDescription, happinessScore, uniquenessScore, characteristic);
+        feedbackSuccess = false;
+        return result;
+    }
+
+    public bool IsFeedbackSuccess()
+    {
+        return feedbackSuccess;
     }
 }

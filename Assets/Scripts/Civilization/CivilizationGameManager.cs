@@ -64,7 +64,18 @@ public class CivilizationGameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(startDelay);
         yield return StartCoroutine(CivilizationFeedback.Instance.GetFeedbackCoroutine("IQ-459712 is a diverse, uninhabited planet marked by striking topographical features. Enormous dunes sweep across its surface, while extensive, humid wetlands host a teeming ecosystem, scoring 8/10 for animal life. The terrain dramatically drops into profound gorges that slice through the landscape. Despite the abundant wetlands, the planet lacks overall water coverage, only scoring a mere 1/10. It's a remarkable world of contrast and biodiversity, sans signs of intelligent life, awaiting future exploration.", "I first throw a large party to celebrate the new civilization we have created."));
-        string feedback = CivilizationFeedback.Instance.GetFeedback();
-        Debug.Log(feedback);
+
+        if (CivilizationFeedback.Instance.IsFeedbackSuccess())
+        {
+            (string feedbackDescription, float happinessScore, float uniquenessScore, string characteristic) = CivilizationFeedback.Instance.GetFeedback();
+            Debug.Log("Feedback Description: " + feedbackDescription);
+            Debug.Log("Happiness Score: " + happinessScore);
+            Debug.Log("Uniqueness Score: " + uniquenessScore);
+            Debug.Log("Characteristic: " + characteristic);
+        }
+        else
+        {
+            Debug.LogError("Failed to retrieve valid feedback.");
+        }
     }
 }
