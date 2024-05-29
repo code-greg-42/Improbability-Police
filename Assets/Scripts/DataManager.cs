@@ -112,7 +112,6 @@ public class DataManager : MonoBehaviour
 
     public List<string> GetPastUserActions()
     {
-        Debug.Log(pastUserActions);
         return pastUserActions;
     }
 
@@ -134,6 +133,11 @@ public class DataManager : MonoBehaviour
     public void ResetCharacteristics()
     {
         characteristics = new List<string>();
+    }
+
+    public void ResetPastUserActions()
+    {
+        pastUserActions = new List<string>();
     }
 
     public void SetCivilizationDescription(string description)

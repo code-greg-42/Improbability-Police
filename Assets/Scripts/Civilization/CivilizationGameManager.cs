@@ -67,8 +67,17 @@ public class CivilizationGameManager : MonoBehaviour
         uiManager.ActivateImage();
         yield return StartCoroutine(uiManager.DisplayMainText(planetDescription + openingQuestion, true));
         
-        // activate user input field and back to menu button
-        uiManager.ActivateUserInput();
+        // provide user input if planet generator does not run correctly
+        if (planetDescription != null)
+        {
+            uiManager.ActivateUserInput();
+        }
+        else
+        {
+            StartCoroutine(uiManager.RunInformationWarning("Error occurred. Please return to menu and try again.", true));
+        }
+        
+        // activate back to menu button
         uiManager.ActivateBackToMenuButton();
     }
 
@@ -148,15 +157,17 @@ public class CivilizationGameManager : MonoBehaviour
                 DataManager.Instance.SetImage(feedbackImage);
                 uiManager.SetImage(feedbackImage);
             }
+
+            // activate user input and back to menu button
+            uiManager.ActivateUserInput();
+            uiManager.ActivateBackToMenuButton();
         }
         else
         {
             Debug.LogError("Failed to retrieve valid feedback.");
+            StartCoroutine(uiManager.RunInformationWarning("Error occurred. Please return to menu and try again.", true));
+            uiManager.ActivateBackToMenuButton();
         }
-
-        // activate user input and back to menu button
-        uiManager.ActivateUserInput();
-        uiManager.ActivateBackToMenuButton();
     }
 
     public void BackToMenu()
