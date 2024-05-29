@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class CivilizationFeedback : MonoBehaviour
 {
-    public static CivilizationFeedback Instance { get; private set; }
-
     private string feedbackDescription;
     private float happinessScore;
     private float uniquenessScore;
@@ -34,10 +32,7 @@ public class CivilizationFeedback : MonoBehaviour
             "*end response*\n\n" +
             "Here is the information for the game:";
 
-    private void Awake()
-    {
-        Instance = this;
-    }
+    private readonly string imageInstructions = "Generate a photorealistic image of a scene of a new civilization on a new planet with the following description: ";
 
     public IEnumerator GetFeedbackCoroutine(string planetDescription, string userAction, string civilizationDescription = "The is the first step in the game and the user has not chosen to build anything yet. The civilization is currently a collection of people, with basic shelter structures set up, but nothing more.")
     {
@@ -67,7 +62,7 @@ public class CivilizationFeedback : MonoBehaviour
 
     public IEnumerator GetFeedbackImageCoroutine(string civilizationDescription)
     {
-        yield return OpenAIManager.Instance.GetImageCoroutine(civilizationDescription);
+        yield return OpenAIManager.Instance.GetImageCoroutine(imageInstructions + civilizationDescription);
         feedbackImage = OpenAIManager.Instance.GetImage();
 
         if (feedbackImage != null)

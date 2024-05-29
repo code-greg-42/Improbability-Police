@@ -4,17 +4,15 @@ using UnityEngine;
 
 public class CivilizationGameManager : MonoBehaviour
 {
-    public static CivilizationGameManager Instance { get; private set; }
-
     private readonly float startDelay = 1.5f;
     private readonly float startTextMinimumTime = 17.0f;
     private readonly string initialStartText = "Your ships, which contain 100,000 people, are heading towards your assigned planet. Food, water, basic shelter, and security are guaranteed from the technology you possess. Happiness is not. Reminder: Unique civilizations are rewarded greatly. Good Luck! Your assigned planet is: Planet ";
     private readonly string openingQuestion = "\n\nYou will be landing momentarily. What is your first action for your civilization?";
 
-    private void Awake()
-    {
-        Instance = this;
-    }
+    // references
+    [SerializeField] private CivilizationFeedback civilizationFeedback;
+    [SerializeField] private PlanetGenerator planetGenerator;
+    [SerializeField] private CivilizationUIManager uiManager;
 
     private void Start()
     {
@@ -28,18 +26,18 @@ public class CivilizationGameManager : MonoBehaviour
         yield return new WaitForSeconds(startDelay);
 
         // get new planet name
-        string planetName = PlanetGenerator.Instance.GeneratePlanetName();
+        string planetName = planetGenerator.GeneratePlanetName();
         // init start text with planet name
-        StartCoroutine(CivilizationUIManager.Instance.DisplayStartText(initialStartText + planetName));
+        StartCoroutine(uiManager.DisplayStartText(initialStartText + planetName));
 
         // set start time for ensuring start text is displayed for long enough
         float startTime = Time.time;
 
         // run planet generator and wait for results
-        yield return StartCoroutine(PlanetGenerator.Instance.GeneratePlanetCoroutine(planetName));
+        yield return StartCoroutine(planetGenerator.GeneratePlanetCoroutine(planetName));
         // get results and save to variables
-        string planetDescription = PlanetGenerator.Instance.GetPlanetDescription();
-        Texture2D planetImage = PlanetGenerator.Instance.GetPlanetImage();
+        string planetDescription = planetGenerator.GetPlanetDescription();
+        Texture2D planetImage = planetGenerator.GetPlanetImage();
 
         // find elapsed time and wait for additional time if necessary
         float elapsedTime = Time.time - startTime;
@@ -51,42 +49,42 @@ public class CivilizationGameManager : MonoBehaviour
         }
 
         // set results to UI and display main description text on screen
-        CivilizationUIManager.Instance.SetImage(planetImage);
-        CivilizationUIManager.Instance.DeactivateStartText();
-        CivilizationUIManager.Instance.ActivateImage();
-        yield return StartCoroutine(CivilizationUIManager.Instance.DisplayMainText(planetDescription + openingQuestion));
+        uiManager.SetImage(planetImage);
+        uiManager.DeactivateStartText();
+        uiManager.ActivateImage();
+        yield return StartCoroutine(uiManager.DisplayMainText(planetDescription + openingQuestion));
         
         // activate user input field
-        CivilizationUIManager.Instance.ActivateUserInput();
+        uiManager.ActivateUserInput();
     }
 
     private IEnumerator TestFeedback()
     {
         yield return new WaitForSeconds(startDelay);
-        yield return StartCoroutine(CivilizationFeedback.Instance.GetFeedbackCoroutine("IQ-459712 is a diverse, uninhabited planet marked by striking topographical features. Enormous dunes sweep across its surface, while extensive, humid wetlands host a teeming ecosystem, scoring 8/10 for animal life. The terrain dramatically drops into profound gorges that slice through the landscape. Despite the abundant wetlands, the planet lacks overall water coverage, only scoring a mere 1/10. It's a remarkable world of contrast and biodiversity, sans signs of intelligent life, awaiting future exploration.", "I first throw a large party to celebrate the new civilization we have created."));
+        yield return StartCoroutine(civilizationFeedback.GetFeedbackCoroutine("IQ-459712 is a diverse, uninhabited planet marked by striking topographical features. Enormous dunes sweep across its surface, while extensive, humid wetlands host a teeming ecosystem, scoring 8/10 for animal life. The terrain dramatically drops into profound gorges that slice through the landscape. Despite the abundant wetlands, the planet lacks overall water coverage, only scoring a mere 1/10. It's a remarkable world of contrast and biodiversity, sans signs of intelligent life, awaiting future exploration.", "I first throw a large party to celebrate the new civilization we have created."));
 
-        if (CivilizationFeedback.Instance.IsFeedbackSuccess())
+        if (civilizationFeedback.IsFeedbackSuccess())
         {
-            (string feedbackDescription, float happinessScore, float uniquenessScore, string characteristic) = CivilizationFeedback.Instance.GetFeedback();
+            (string feedbackDescription, float happinessScore, float uniquenessScore, string characteristic) = civilizationFeedback.GetFeedback();
             Debug.Log("Feedback Description: " + feedbackDescription);
             Debug.Log("Happiness Score: " + happinessScore);
             Debug.Log("Uniqueness Score: " + uniquenessScore);
             Debug.Log("Characteristic: " + characteristic);
 
             // set scores to UI
-            CivilizationUIManager.Instance.SetCharacteristic(characteristic);
-            CivilizationUIManager.Instance.SetHappinessScore(happinessScore);
-            CivilizationUIManager.Instance.SetUniquenessScore(uniquenessScore);
+            uiManager.SetCharacteristic(characteristic);
+            uiManager.SetHappinessScore(happinessScore);
+            uiManager.SetUniquenessScore(uniquenessScore);
 
             // display feedback in main text slot
-            StartCoroutine(CivilizationUIManager.Instance.DisplayMainText(feedbackDescription));
+            StartCoroutine(uiManager.DisplayMainText(feedbackDescription));
 
-            yield return StartCoroutine(CivilizationFeedback.Instance.GetFeedbackImageCoroutine(feedbackDescription));
+            yield return StartCoroutine(civilizationFeedback.GetFeedbackImageCoroutine(feedbackDescription));
 
-            if (CivilizationFeedback.Instance.IsImageSuccess())
+            if (civilizationFeedback.IsImageSuccess())
             {
-                Texture2D feedbackImage = CivilizationFeedback.Instance.GetFeedbackImage();
-                CivilizationUIManager.Instance.SetImage(feedbackImage);
+                Texture2D feedbackImage = civilizationFeedback.GetFeedbackImage();
+                uiManager.SetImage(feedbackImage);
             }
         }
         else

@@ -7,8 +7,6 @@ using Unity.VisualScripting;
 
 public class CivilizationUIManager : MonoBehaviour
 {
-    public static CivilizationUIManager Instance { get; private set; }
-
     private readonly float wordDisplayDelay = 0.1f; // delay between each word
 
     // references
@@ -20,11 +18,6 @@ public class CivilizationUIManager : MonoBehaviour
     [SerializeField] private RawImage image;
     [SerializeField] private TMP_InputField userInput;
     [SerializeField] private Button submitButton;
-
-    private void Awake()
-    {
-        Instance = this;
-    }
 
     public void ActivateImage()
     {

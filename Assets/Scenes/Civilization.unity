@@ -489,6 +489,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 198a64a98f23cd440bf035fe8c91f333, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  civilizationFeedback: {fileID: 213640559}
+  planetGenerator: {fileID: 213640556}
+  uiManager: {fileID: 213640557}
 --- !u!114 &213640559
 MonoBehaviour:
   m_ObjectHideFlags: 0

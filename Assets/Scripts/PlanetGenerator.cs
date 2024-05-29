@@ -5,8 +5,6 @@ using UnityEngine.UI;
 
 public class PlanetGenerator : MonoBehaviour
 {
-    public static PlanetGenerator Instance { get; private set; }
-
     private string planetDescription;
     private Texture2D planetImage;
 
@@ -29,12 +27,6 @@ public class PlanetGenerator : MonoBehaviour
         "wetlands", "glacier", "delta", "bayou", "rainforest", "moor",
         "mesa", "oasis", "foothills", "sinkhole"
     };
-
-    private void Awake()
-    {
-        // singleton
-        Instance = this;
-    }
 
     // single random instance
     private System.Random random = new System.Random();
