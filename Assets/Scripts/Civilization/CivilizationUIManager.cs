@@ -18,6 +18,13 @@ public class CivilizationUIManager : MonoBehaviour
     [SerializeField] private RawImage image;
     [SerializeField] private TMP_InputField userInput;
     [SerializeField] private Button submitButton;
+    [SerializeField] private TMP_Text informationWarning;
+    [SerializeField] private Button backToMenuButton;
+
+    public void ActivateBackToMenuButton()
+    {
+        backToMenuButton.gameObject.SetActive(true);
+    }
 
     public void ActivateImage()
     {
@@ -28,6 +35,11 @@ public class CivilizationUIManager : MonoBehaviour
     {
         userInput.gameObject.SetActive(true);
         submitButton.gameObject.SetActive(true);
+    }
+
+    public void DeactivateBackToMenuButton()
+    {
+        backToMenuButton.gameObject.SetActive(false);
     }
 
     public void DeactivateStartText()
@@ -46,7 +58,7 @@ public class CivilizationUIManager : MonoBehaviour
         characteristic.text = "Leadership Personality: " + description;
     }
 
-    public void SetHappinessScore(float score)
+    public void SetHappinessScore(string score)
     {
         happinessScore.text = "Happiness: " + score;
     }
@@ -56,7 +68,7 @@ public class CivilizationUIManager : MonoBehaviour
         image.texture = texture;
     }
 
-    public void SetUniquenessScore(float score)
+    public void SetUniquenessScore(string score)
     {
         uniquenessScore.text = "Uniqueness: " + score;
     }
@@ -71,10 +83,27 @@ public class CivilizationUIManager : MonoBehaviour
         }
     }
 
-    public IEnumerator DisplayMainText(string text)
+    public IEnumerator DisplayMainText(string text, bool initialText = false)
     {
         // clear existing text
         mainText.text = "";
+
+        // set position based on if it is the initial text, or a typical feedback round
+        RectTransform rectTransform = mainText.gameObject.GetComponent<RectTransform>();
+
+        Vector2 anchoredPosition = rectTransform.anchoredPosition;
+
+        if (initialText)
+        {
+            anchoredPosition.y = 50;
+        }
+        else
+        {
+            anchoredPosition.y = -50;
+        }
+
+        // assign correct position back to the transform
+        rectTransform.anchoredPosition = anchoredPosition;
 
         string[] words = text.Split(' '); // Split the text into an array of words
         foreach (string word in words)
