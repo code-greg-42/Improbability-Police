@@ -18,8 +18,14 @@ public class CivilizationGameManager : MonoBehaviour
 
     private void Start()
     {
-        //StartCoroutine(RunIntro());
-        StartCoroutine(TestFeedback());
+        if (DataManager.Instance.HasUserActed())
+        {
+            StartCoroutine(LoadCurrent());
+        }
+        else
+        {
+            StartCoroutine(RunIntro());
+        }
     }
 
     private IEnumerator RunIntro()
@@ -37,9 +43,14 @@ public class CivilizationGameManager : MonoBehaviour
 
         // run planet generator and wait for results
         yield return StartCoroutine(planetGenerator.GeneratePlanetCoroutine(planetName));
+
         // get results and save to variables
         string planetDescription = planetGenerator.GetPlanetDescription();
         Texture2D planetImage = planetGenerator.GetPlanetImage();
+
+        // save planetDescription and image to DataManager
+        DataManager.Instance.SetPlanetDescription(planetDescription);
+        DataManager.Instance.SetImage(planetImage);
 
         // find elapsed time and wait for additional time if necessary
         float elapsedTime = Time.time - startTime;
@@ -56,14 +67,51 @@ public class CivilizationGameManager : MonoBehaviour
         uiManager.ActivateImage();
         yield return StartCoroutine(uiManager.DisplayMainText(planetDescription + openingQuestion, true));
         
-        // activate user input field
+        // activate user input field and back to menu button
         uiManager.ActivateUserInput();
+        uiManager.ActivateBackToMenuButton();
     }
 
-    private IEnumerator TestFeedback()
+    private IEnumerator LoadCurrent()
     {
+        // give user a moment for eyes to adjust, and time for the api key to load
         yield return new WaitForSeconds(startDelay);
-        yield return StartCoroutine(civilizationFeedback.GetFeedbackCoroutine("IQ-459712 is a diverse, uninhabited planet marked by striking topographical features. Enormous dunes sweep across its surface, while extensive, humid wetlands host a teeming ecosystem, scoring 8/10 for animal life. The terrain dramatically drops into profound gorges that slice through the landscape. Despite the abundant wetlands, the planet lacks overall water coverage, only scoring a mere 1/10. It's a remarkable world of contrast and biodiversity, sans signs of intelligent life, awaiting future exploration.", "I first throw a large party to celebrate the new civilization we have created.", "The is the first step in the game and the user has not chosen to build anything yet. The civilization is currently a collection of people, with basic shelter structures set up, but nothing more.", "None", "None"));
+
+        // get existing values from data manager
+        Texture2D image = DataManager.Instance.GetImage();
+        string currentText = DataManager.Instance.GetCivilizationDescription();
+        string happinessScore = DataManager.Instance.GetHappinessScore();
+        string uniquenessScore = DataManager.Instance.GetUniquenessScore();
+        string characteristic = DataManager.Instance.GetCharacteristic();
+
+        // set values to UI
+        uiManager.SetImage(image);
+        uiManager.SetHappinessScore(happinessScore);
+        uiManager.SetUniquenessScore(uniquenessScore);
+        uiManager.SetCharacteristic(characteristic);
+
+        // activate image component
+        uiManager.ActivateImage();
+
+        // display text in main text box
+        yield return StartCoroutine(uiManager.DisplayMainText(currentText + nextRoundQuestion));
+
+        // activate user input box and back to menu button
+        uiManager.ActivateUserInput();
+        uiManager.ActivateBackToMenuButton();
+    }
+
+    private IEnumerator RunFeedbackCycle(string userInput)
+    {
+        // get current data from data manager
+        string currentPlanetDescription = DataManager.Instance.GetPlanetDescription();
+        string currentCivilizationDescription = DataManager.Instance.GetCivilizationDescription();
+        string currentHappinessScore = DataManager.Instance.GetHappinessScore();
+        string currentUniquenessScore = DataManager.Instance.GetUniquenessScore();
+        List<string> pastUserActions = DataManager.Instance.GetPastUserActions();
+
+        // send data and with user input to gpt-4
+        yield return StartCoroutine(civilizationFeedback.GetFeedbackCoroutine(currentPlanetDescription, userInput, currentCivilizationDescription, currentHappinessScore, currentUniquenessScore, pastUserActions));
 
         if (civilizationFeedback.IsFeedbackSuccess())
         {
@@ -78,6 +126,15 @@ public class CivilizationGameManager : MonoBehaviour
             uiManager.SetHappinessScore(happinessScore);
             uiManager.SetUniquenessScore(uniquenessScore);
 
+            // save variables to data manager
+            DataManager.Instance.SetCivilizationDescription(feedbackDescription);
+            DataManager.Instance.SetHappinessScore(happinessScore);
+            DataManager.Instance.SetUniquenessScore(uniquenessScore);
+            DataManager.Instance.AddToCharacteristics(characteristic);
+
+            // set data manager bool to true as player has acted
+            DataManager.Instance.SetUserHasActed(true);
+
             // display feedback in main text slot
             StartCoroutine(uiManager.DisplayMainText(feedbackDescription + nextRoundQuestion));
 
@@ -86,6 +143,9 @@ public class CivilizationGameManager : MonoBehaviour
             if (civilizationFeedback.IsImageSuccess())
             {
                 Texture2D feedbackImage = civilizationFeedback.GetFeedbackImage();
+
+                // save to data manager and set to UI
+                DataManager.Instance.SetImage(feedbackImage);
                 uiManager.SetImage(feedbackImage);
             }
         }
@@ -94,12 +154,30 @@ public class CivilizationGameManager : MonoBehaviour
             Debug.LogError("Failed to retrieve valid feedback.");
         }
 
-        // activate back to menu button
+        // activate user input and back to menu button
+        uiManager.ActivateUserInput();
         uiManager.ActivateBackToMenuButton();
     }
 
     public void BackToMenu()
     {
         SceneManager.LoadScene(0);
+    }
+
+    public void OnSubmit()
+    {
+        // get user input and set to a variable
+        string userInput = uiManager.GetUserInput();
+
+        // save user action to data manager
+        DataManager.Instance.AddToPastUserActions(userInput);
+
+        // update ui
+        uiManager.DeactivateUserInput();
+        uiManager.DeactivateBackToMenuButton();
+        StartCoroutine(uiManager.RunInformationWarning("Reply Sent! Waiting..."));
+
+        // start feedback cycle
+        StartCoroutine(RunFeedbackCycle(userInput));
     }
 }

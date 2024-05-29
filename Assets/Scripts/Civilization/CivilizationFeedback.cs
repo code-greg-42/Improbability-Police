@@ -15,11 +15,11 @@ public class CivilizationFeedback : MonoBehaviour
 
     private readonly string instructions = "Let's play a game. I'm the user, I've been given control of a new civilization with advanced building technology. " +
             "I am landing on a new planet to build a new civilization. Food, water, and basic shelter are guaranteed, but happiness of the civilization is not. " +
-            "I'm going to give you a description of the planet, a description of where the civilization is at, a current happiness score, a current uniqueness score, and then give you a chosen action for the next step for the civilization. " +
+            "I'm going to give you a description of the planet, a description of where the civilization is at, a current happiness score, a current uniqueness score, a list of past actions, and then give you a chosen action for the next step for the civilization. " +
             "Then, I'd like you to give an updated description of where the civilization is at, a happiness score (1 to 100 with 100 the most happy) for the civilization, a uniqueness score (1 to 100 with 100 as the most unique) for how unique the resulting civilization is, and a characteristic that describes my personality, given the chosen action for the civilization.\n\n" +
             "For the updated description, keep the description to 120 words or less. Include details about the happiness of the civilization. Include any problems that you might see occurring, pertaining to the happiness of the civilization, due to the route for the civilization that the user chose.\n\n" +
-            "For happiness, be as objective as possible. It's a game, and we don't want everyone winning. Use what you know about people to project a happiness score. Factor in the current happiness score when making an assessment about the new one (unless the current score is None).\n\n" +
-            "For uniqueness, use both what you know about present civilizations, but also people's dreams for perfect civilizations, to project what the 'average' person would choose in this situation, and create a score with that as the benchmark. Be objective. Factor in the current uniqueness score when making an assessment about the new one (unless the current score is None).\n\n" +
+            "For happiness, be as objective as possible. It's a game, and we don't want everyone winning. Use what you know about people to project a happiness score.\n\n" +
+            "For uniqueness, use both what you know about present civilizations, but also people's dreams for perfect civilizations, to project what the 'average' person would choose in this situation, and create a score with that as the benchmark. Be objective.\n\n" +
             "For characteristic, use a word that describes the action that I took in the user action section\n\n" +
             "Formatting (VERY IMPORTANT):\n\n" +
             "It should include four sections and nothing else. Description, Happiness, Uniqueness, Characteristic. The description section should be 120 words or less of text only with no additional formatting, the happiness/uniqueness sections should be only numbers between 1 and 100, and the characteristic section should be a single word.\n\n" +
@@ -34,9 +34,9 @@ public class CivilizationFeedback : MonoBehaviour
 
     private readonly string imageInstructions = "Generate a photorealistic image of a scene of a new civilization on a new planet with the following description: ";
 
-    public IEnumerator GetFeedbackCoroutine(string planetDescription, string userAction, string civilizationDescription, string currentHappinessScore, string currentUniquenessScore)
+    public IEnumerator GetFeedbackCoroutine(string planetDescription, string userAction, string civilizationDescription, string currentHappinessScore, string currentUniquenessScore, List<string> pastUserActions)
     {
-        string formattedPrompt = FormatPrompt(planetDescription, userAction, civilizationDescription, currentHappinessScore, currentUniquenessScore);
+        string formattedPrompt = FormatPrompt(planetDescription, userAction, civilizationDescription, currentHappinessScore, currentUniquenessScore, pastUserActions);
 
         // send formatted prompt to open ai api and wait for response
         yield return OpenAIManager.Instance.GetResponseCoroutine(formattedPrompt);
@@ -102,9 +102,20 @@ public class CivilizationFeedback : MonoBehaviour
     }
 
     // helper method
-    private string FormatPrompt(string planetDescription, string userAction, string civilizationDescription, string currentHappinessScore, string currentUniquenessScore)
+    private string FormatPrompt(string planetDescription, string userAction, string civilizationDescription, string currentHappinessScore, string currentUniquenessScore, List<string> pastUserActions)
     {
         string prompt = instructions + "\n\nPlanet Description:\n" + planetDescription + "\n\nCivilization Description:\n" + civilizationDescription + "\n\nCurrent Happiness Score: " + currentHappinessScore + "\n\nCurrent Uniqueness Score: " + currentUniquenessScore + "\n\nUser Action:\n" + userAction;
+
+        // Append past user actions to the prompt
+        if (pastUserActions != null && pastUserActions.Count > 0)
+        {
+            prompt += "\n\nPast User Actions:";
+            foreach (string action in pastUserActions)
+            {
+                prompt += "\n- " + action;
+            }
+        }
+
         return prompt;
     }
 

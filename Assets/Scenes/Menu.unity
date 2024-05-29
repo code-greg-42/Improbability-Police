@@ -1940,6 +1940,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   backstoryButton: {fileID: 4662151}
+  continueButton: {fileID: 1171289246}
+  newCivilizationButton: {fileID: 663508184}
 --- !u!4 &1722829559
 Transform:
   m_ObjectHideFlags: 0

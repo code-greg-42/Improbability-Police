@@ -11,6 +11,11 @@ public class DataManager : MonoBehaviour
     private string happinessScore = "None";
     private string uniquenessScore = "None";
 
+    private List<string> pastUserActions = new List<string>();
+
+    private Texture2D image;
+    private bool userHasActed;
+
     private List<string> characteristics = new List<string>();
 
     private void Awake()
@@ -31,6 +36,11 @@ public class DataManager : MonoBehaviour
         characteristics.Add(characteristic);
     }
 
+    public void AddToPastUserActions(string userAction)
+    {
+        pastUserActions.Add(userAction);
+    }
+
     public string GetCharacteristic()
     {
         if (characteristics.Count > 0)
@@ -39,6 +49,11 @@ public class DataManager : MonoBehaviour
         }
 
         return null; // Return null if the list is empty
+    }
+
+    public Texture2D GetImage()
+    {
+        return image;
     }
 
     // Method to get the most common characteristic in the list
@@ -95,6 +110,12 @@ public class DataManager : MonoBehaviour
         return happinessScore;
     }
 
+    public List<string> GetPastUserActions()
+    {
+        Debug.Log(pastUserActions);
+        return pastUserActions;
+    }
+
     public string GetPlanetDescription()
     {
         return planetDescription;
@@ -105,14 +126,34 @@ public class DataManager : MonoBehaviour
         return uniquenessScore;
     }
 
+    public bool HasUserActed()
+    {
+        return userHasActed;
+    }
+
+    public void ResetCharacteristics()
+    {
+        characteristics = new List<string>();
+    }
+
     public void SetCivilizationDescription(string description)
     {
-        planetDescription = description;
+        civilizationDescription = description;
+    }
+
+    public void SetUserHasActed(bool hasActed)
+    {
+        userHasActed = hasActed;
     }
 
     public void SetHappinessScore(string score)
     {
         happinessScore = score;
+    }
+
+    public void SetImage(Texture2D texture)
+    {
+        image = texture;
     }
 
     public void SetPlanetDescription(string description)

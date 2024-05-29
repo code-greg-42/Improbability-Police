@@ -8,6 +8,7 @@ using Unity.VisualScripting;
 public class CivilizationUIManager : MonoBehaviour
 {
     private readonly float wordDisplayDelay = 0.1f; // delay between each word
+    private readonly float infoWarningTimer = 5.0f; // total duration for info warning
 
     // references
     [SerializeField] private TMP_Text mainText;
@@ -51,6 +52,17 @@ public class CivilizationUIManager : MonoBehaviour
     {
         userInput.gameObject.SetActive(false);
         submitButton.gameObject.SetActive(false);
+    }
+
+    public string GetUserInput()
+    {
+        // save user input to variable
+        string input = userInput.text;
+
+        // clear user input
+        userInput.text = "";
+
+        return input;
     }
 
     public void SetCharacteristic(string description)
@@ -111,5 +123,23 @@ public class CivilizationUIManager : MonoBehaviour
             mainText.text += word + " "; // Add the next word to the text
             yield return new WaitForSeconds(wordDisplayDelay); // Wait for the specified delay
         }
+    }
+
+    public IEnumerator RunInformationWarning(string warningText, bool isError = false)
+    {
+        if (isError)
+        {
+            informationWarning.color = Color.red;
+        }
+        else
+        {
+            informationWarning.color = Color.green;
+        }
+
+        informationWarning.text = warningText;
+
+        yield return new WaitForSeconds(infoWarningTimer);
+
+        informationWarning.text = "";
     }
 }
