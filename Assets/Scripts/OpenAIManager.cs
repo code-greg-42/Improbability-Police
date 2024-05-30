@@ -9,8 +9,11 @@ public class OpenAIManager : MonoBehaviour
     public static OpenAIManager Instance { get; private set; }
 
     private string apiKey;
-    private readonly string apiUrl = "https://api.openai.com/v1/chat/completions";
-    private readonly string imageApiUrl = "https://api.openai.com/v1/images/generations"; // URL for image generation
+    //private readonly string apiUrl = "https://api.openai.com/v1/chat/completions";
+    //private readonly string imageApiUrl = "https://api.openai.com/v1/images/generations"; // URL for image generation
+    private readonly string backendUrl = "https://ec2-3-15-237-163.us-east-2.compute.amazonaws.com";
+    private readonly string responseEndpoint = "/get_response";
+    private readonly string imageEndpoint = "/get_image";
 
     private string recentResponse;
     private Texture2D recentImage;
@@ -22,31 +25,31 @@ public class OpenAIManager : MonoBehaviour
 
     void Start()
     {
-        LoadApiKeyFromConfig();
+        //LoadApiKeyFromConfig();
 
-        if (string.IsNullOrEmpty(apiKey))
-        {
-            Debug.LogError("API Key is missing. Please set the API key in the config.json file.");
-            return;
-        }
+        //if (string.IsNullOrEmpty(apiKey))
+        //{
+        //    Debug.LogError("API Key is missing. Please set the API key in the config.json file.");
+        //    return;
+        //}
     }
 
-    private void LoadApiKeyFromConfig()
-    {
-        string path = Path.Combine(Application.streamingAssetsPath, "config.json");
+    //private void LoadApiKeyFromConfig()
+    //{
+    //    string path = Path.Combine(Application.streamingAssetsPath, "config.json");
 
-        if (File.Exists(path))
-        {
-            // Read the config file and deserialize the API key
-            string json = File.ReadAllText(path);
-            Config config = JsonUtility.FromJson<Config>(json);
-            apiKey = config.apiKey;
-        }
-        else
-        {
-            Debug.LogError("Config file not found: " + path);
-        }
-    }
+    //    if (File.Exists(path))
+    //    {
+    //        // Read the config file and deserialize the API key
+    //        string json = File.ReadAllText(path);
+    //        Config config = JsonUtility.FromJson<Config>(json);
+    //        apiKey = config.apiKey;
+    //    }
+    //    else
+    //    {
+    //        Debug.LogError("Config file not found: " + path);
+    //    }
+    //}
 
     public string GetResponse()
     {
@@ -61,22 +64,32 @@ public class OpenAIManager : MonoBehaviour
     public IEnumerator GetResponseCoroutine(string prompt, string systemInstructions = "You are a helpful assistant.", int maxTokens = 200)
     {
         // Create the messages list
-        List<Message> messages = new List<Message>
-        {
-            new Message { role = "system", content = systemInstructions },
-            new Message { role = "user", content = prompt }
-        };
+        //List<Message> messages = new List<Message>
+        //{
+        //    new Message { role = "system", content = systemInstructions },
+        //    new Message { role = "user", content = prompt }
+        //};
 
-        // Create the request object
+        //// Create the request object
+        //OpenAIRequest requestObject = new OpenAIRequest
+        //{
+        //    model = "gpt-4",
+        //    messages = messages,
+        //    max_tokens = maxTokens
+        //};
+
         OpenAIRequest requestObject = new OpenAIRequest
         {
-            model = "gpt-4",
-            messages = messages,
-            max_tokens = maxTokens
+            prompt = prompt,
+            systemInstructions = systemInstructions,
+            maxTokens = maxTokens
         };
 
         // Use the helper method to create the request
-        UnityWebRequest request = CreatePostRequest(apiUrl, requestObject);
+        UnityWebRequest request = CreatePostRequest(responseEndpoint, requestObject);
+
+        // Disable SSL verification
+        request.certificateHandler = new BypassCertificate();
 
         // Send the request and wait for the response
         yield return request.SendWebRequest();
@@ -86,8 +99,10 @@ public class OpenAIManager : MonoBehaviour
         {
             // Parse the response JSON
             string responseText = request.downloadHandler.text;
+            Debug.Log(responseText);
             OpenAIChatResponse response = JsonUtility.FromJson<OpenAIChatResponse>(responseText);
 
+            Debug.Log(response);
             // set the recent response variable
             recentResponse = response.choices[0].message.content.Trim();
         }
@@ -102,15 +117,23 @@ public class OpenAIManager : MonoBehaviour
     public IEnumerator GetImageCoroutine(string description)
     {
         // Create the request object for image generation
+        //OpenAIImageRequest requestObject = new OpenAIImageRequest
+        //{
+        //    prompt = description,
+        //    n = 1,
+        //    size = "1024x1024"
+        //};
+
         OpenAIImageRequest requestObject = new OpenAIImageRequest
         {
-            prompt = description,
-            n = 1,
-            size = "1024x1024"
+            description = description
         };
 
         // Use the helper method to create the request
-        UnityWebRequest request = CreatePostRequest(imageApiUrl, requestObject);
+        UnityWebRequest request = CreatePostRequest(imageEndpoint, requestObject);
+
+        // Disable SSL verification
+        request.certificateHandler = new BypassCertificate();
 
         // Send the request and wait for the response
         yield return request.SendWebRequest();
@@ -146,13 +169,15 @@ public class OpenAIManager : MonoBehaviour
         }
     }
 
-    private UnityWebRequest CreatePostRequest(string apiUrl, object requestObject)
+    private UnityWebRequest CreatePostRequest(string endpoint, object requestObject)
     {
         // Convert the JSON object to a string
         string jsonData = JsonUtility.ToJson(requestObject);
 
+        Debug.Log(jsonData);
+
         // Create a new UnityWebRequest for the POST request
-        UnityWebRequest request = new UnityWebRequest(apiUrl, "POST");
+        UnityWebRequest request = new UnityWebRequest(backendUrl + endpoint, "POST");
 
         // Set the request body to the JSON data
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
@@ -163,9 +188,17 @@ public class OpenAIManager : MonoBehaviour
 
         // Set the request headers for content type and authorization
         request.SetRequestHeader("Content-Type", "application/json");
-        request.SetRequestHeader("Authorization", "Bearer " + apiKey);
+        //request.SetRequestHeader("Authorization", "Bearer " + apiKey);
 
         return request;
+    }
+
+    private class BypassCertificate : CertificateHandler
+    {
+        protected override bool ValidateCertificate(byte[] certificateData)
+        {
+            return true;
+        }
     }
 
     [System.Serializable]
@@ -196,17 +229,15 @@ public class OpenAIManager : MonoBehaviour
     [System.Serializable]
     private class OpenAIRequest
     {
-        public string model;
-        public List<Message> messages;
-        public int max_tokens;
+        public string prompt;
+        public string systemInstructions;
+        public int maxTokens;
     }
 
     [System.Serializable]
     private class OpenAIImageRequest
     {
-        public string prompt;
-        public int n;
-        public string size;
+        public string description;
     }
 
     [System.Serializable]
