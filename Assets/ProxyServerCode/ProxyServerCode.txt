@@ -1,0 +1,77 @@
+# Proxy Server Code
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import requests
+import os
+
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS for all routes
+
+# Load the API key from environment variables for security
+API_KEY = os.getenv('OPENAI_API_KEY')
+
+# URL for OpenAI Chat API
+CHAT_API_URL = "https://api.openai.com/v1/chat/completions"
+# URL for OpenAI Image API
+IMAGE_API_URL = "https://api.openai.com/v1/images/generations"
+
+@app.route('/get_response', methods=['POST'])
+def get_response():
+    data = request.json
+    app.logger.info(f'Received data: {data}')  # Debugging statement
+
+    prompt = data.get('prompt')
+    if prompt is None:
+        return jsonify({"error": "No prompt provided"}), 400
+
+    system_instructions = data.get('systemInstructions', 'You are a helpful assistant.')
+    max_tokens = data.get('maxTokens', 200)
+
+    messages = [
+        {"role": "system", "content": system_instructions},
+        {"role": "user", "content": prompt}
+    ]
+
+    request_object = {
+        "model": "gpt-4",
+        "messages": messages,
+        "max_tokens": max_tokens
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {API_KEY}"
+    }
+
+    response = requests.post(CHAT_API_URL, json=request_object, headers=headers)
+    response_json = response.json()
+
+    return jsonify(response_json)
+
+@app.route('/get_image', methods=['POST'])
+def get_image():
+    data = request.json
+    app.logger.info(f'Received data: {data}')  # Debugging statement
+
+    description = data.get('description')
+    if description is None:
+        return jsonify({"error": "No description provided"}), 400
+
+    request_object = {
+        "prompt": description,
+        "n": 1,
+        "size": "1024x1024"
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {API_KEY}"
+    }
+
+    response = requests.post(IMAGE_API_URL, json=request_object, headers=headers)
+    response_json = response.json()
+
+    return jsonify(response_json)
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=443, ssl_context=('cert.pem', 'key.pem'))
