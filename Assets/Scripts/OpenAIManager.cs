@@ -6,11 +6,14 @@ using System.IO;
 
 public class OpenAIManager : MonoBehaviour
 {
+    // COMMENTED CODE SHOWS CODE PRIOR TO ADJUSTMENT TO PROXY SERVER
     public static OpenAIManager Instance { get; private set; }
 
-    private string apiKey;
+    //private string apiKey;
     //private readonly string apiUrl = "https://api.openai.com/v1/chat/completions";
     //private readonly string imageApiUrl = "https://api.openai.com/v1/images/generations"; // URL for image generation
+
+    // AWS PROXY SERVER INFO
     private readonly string backendUrl = "https://ec2-3-15-237-163.us-east-2.compute.amazonaws.com";
     private readonly string responseEndpoint = "/get_response";
     private readonly string imageEndpoint = "/get_image";
