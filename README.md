@@ -17,7 +17,7 @@ The development of *Improbability Police* provided numerous learning opportuniti
 - **Working Within a Deadline:** Managing time effectively to develop and deliver the game within the 10-day timeframe of the game jam.
 
 ## Narrative Backstory Video
-- Link coming soon.
+- [Watch the Narrative Backstory Video](https://www.youtube.com/watch?v=IQmGUNdRSwQ)
 
 ## Gameplay Video
 - Link coming soon.
