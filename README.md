@@ -17,7 +17,7 @@ The development of *Improbability Police* provided numerous learning opportuniti
 - **tmux and Server Management:** Using tmux for managing long-running processes on an EC2 instance.
 - **CORS and Network Configuration:** Configuring CORS and security groups to handle cross-origin requests and ensure network security.
 - **Working Within a Deadline:** Managing time effectively to develop and deliver the game within the 10-day timeframe of the game jam.
-- **Prompt Engineering:** Crafting effective prompts to elicit desired responses from GPT-4, which was crucial for generating the right text and scores for the game.
+- **Prompt Engineering:** Crafting effective prompts to elicit desired responses from GPT-4, using both zero shot and one shot prompting, which was crucial for generating the right text and scores for the game.
 
 ## Narrative Backstory Video
 - [Watch the Narrative Backstory Video](https://www.youtube.com/watch?v=IQmGUNdRSwQ)
