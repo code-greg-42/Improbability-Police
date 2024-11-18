@@ -1,7 +1,10 @@
 # Improbability Police
 
 ## Overview
-*Improbability Police* is a simple, proof-of-concept game developed for a 10-day itch.io game jam with a post-apocalyptic theme. The game leverages GPT-4 for dynamic content generation and player interaction, and it was intended to be played in a web browser via itch.io. The game was completed successfully in the 10-day time-frame, but did not work as expected in the itch.io browser. However, the development process provided valuable learning experiences in GPT-4 integration, proxy servers, and AWS. Ultimately, the AWS and OpenAI api costs were too high to keep a demo active long-term, but video of the gameplay can be found at the links below.
+*Improbability Police* is a simple, proof-of-concept game that was developed for a 10-day itch.io game jam with a post-apocalyptic theme, where it came in 1st place. The game leverages GPT-4 for dynamic content generation and player interaction, thus no two playthroughs are identical. The development process provided valuable learning experiences in GPT-4 integration, proxy servers, and AWS. Ultimately, the AWS and OpenAI API costs were too high to keep a demo active long-term, but video of the gameplay can be found at the link below.
+
+## Gameplay Video
+- [Watch the Gameplay Video](https://youtu.be/WctE6Gbzzak)
 
 ## Game Description
 In *Improbability Police*, players are tasked with building a civilization on a newly colonized planet by making decisions of what to build. The game uses GPT-4 to give updates on how the civilization is going and assess the overall happiness of the civilization, as well as the uniqueness of the player's responses.
@@ -21,6 +24,3 @@ The development of *Improbability Police* provided numerous learning opportuniti
 
 ## Narrative Backstory Video
 - [Watch the Narrative Backstory Video](https://www.youtube.com/watch?v=IQmGUNdRSwQ)
-
-## Gameplay Video
-- [Watch the Gameplay Video](https://youtu.be/WctE6Gbzzak)
